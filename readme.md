@@ -14,4 +14,19 @@ query {
     }
   }
 }
+
+query Query {
+  facets {
+    name
+    display_name
+
+    options {
+      value
+      top_products {
+        id
+        value
+      }
+    }
+  }
+}
 ```

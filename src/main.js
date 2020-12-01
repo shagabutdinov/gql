@@ -57,7 +57,7 @@ exports.__esModule = true;
 var node_fetch_1 = __importDefault(require("node-fetch"));
 var apollo_server_1 = require("apollo-server");
 var graphql_type_json_1 = __importDefault(require("graphql-type-json"));
-var typeDefs = apollo_server_1.gql(templateObject_1 || (templateObject_1 = __makeTemplateObject(["\n  # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.\n  scalar JSON\n\n  type Item {\n    id: String\n    value: String\n    recommendations: [Item]\n    explanation: ItemExplanation\n  }\n\n  type ItemExplanation {\n    is_slotted: Boolean\n    computed_score: Int\n    conversion_rules_boost: Int\n    query_refinement_boost: Int\n    final_score: Int\n  }\n\n  type Facet {\n    name: String\n    display_name: String\n    data: JSON\n    options(limit: Int!, data: [String]): [FacetOption]\n  }\n\n  type FacetOption {\n    value: String\n    display_name: String\n    top_products(limit: Int!): [Item]\n  }\n\n  type Search {\n    query: String\n    items: [Item]\n    recommendations: [Item]\n  }\n\n  # The \"Query\" type is special: it lists all of the available queries that\n  # clients can execute, along with the return type for each. In this\n  # case, the \"books\" query returns an array of zero or more Books (defined above).\n  type Query {\n    facets(limit: Int!): [Facet]\n    search(query: String): Search\n  }\n"], ["\n  # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.\n  scalar JSON\n\n  type Item {\n    id: String\n    value: String\n    recommendations: [Item]\n    explanation: ItemExplanation\n  }\n\n  type ItemExplanation {\n    is_slotted: Boolean\n    computed_score: Int\n    conversion_rules_boost: Int\n    query_refinement_boost: Int\n    final_score: Int\n  }\n\n  type Facet {\n    name: String\n    display_name: String\n    data: JSON\n    options(limit: Int!, data: [String]): [FacetOption]\n  }\n\n  type FacetOption {\n    value: String\n    display_name: String\n    top_products(limit: Int!): [Item]\n  }\n\n  type Search {\n    query: String\n    items: [Item]\n    recommendations: [Item]\n  }\n\n  # The \"Query\" type is special: it lists all of the available queries that\n  # clients can execute, along with the return type for each. In this\n  # case, the \"books\" query returns an array of zero or more Books (defined above).\n  type Query {\n    facets(limit: Int!): [Facet]\n    search(query: String): Search\n  }\n"])));
+var typeDefs = apollo_server_1.gql(templateObject_1 || (templateObject_1 = __makeTemplateObject(["\n  # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.\n  scalar JSON\n\n  type Item {\n    id: String\n    value: String\n    recommendations: [Item]\n    explanation: ItemExplanation\n    wiki: String\n  }\n\n  type ItemExplanation {\n    is_slotted: Boolean\n    computed_score: Int\n    conversion_rules_boost: Int\n    query_refinement_boost: Int\n    final_score: Int\n  }\n\n  type Facet {\n    name: String\n    display_name: String\n    data: JSON\n    options(limit: Int!, data: [String]): [FacetOption]\n  }\n\n  type FacetOption {\n    value: String\n    display_name: String\n    top_products(limit: Int!): [Item]\n  }\n\n  type Search {\n    query: String\n    items: [Item]\n    recommendations: [Item]\n  }\n\n  # The \"Query\" type is special: it lists all of the available queries that\n  # clients can execute, along with the return type for each. In this\n  # case, the \"books\" query returns an array of zero or more Books (defined above).\n  type Query {\n    facets(limit: Int!): [Facet]\n    search(query: String): Search\n  }\n"], ["\n  # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.\n  scalar JSON\n\n  type Item {\n    id: String\n    value: String\n    recommendations: [Item]\n    explanation: ItemExplanation\n    wiki: String\n  }\n\n  type ItemExplanation {\n    is_slotted: Boolean\n    computed_score: Int\n    conversion_rules_boost: Int\n    query_refinement_boost: Int\n    final_score: Int\n  }\n\n  type Facet {\n    name: String\n    display_name: String\n    data: JSON\n    options(limit: Int!, data: [String]): [FacetOption]\n  }\n\n  type FacetOption {\n    value: String\n    display_name: String\n    top_products(limit: Int!): [Item]\n  }\n\n  type Search {\n    query: String\n    items: [Item]\n    recommendations: [Item]\n  }\n\n  # The \"Query\" type is special: it lists all of the available queries that\n  # clients can execute, along with the return type for each. In this\n  # case, the \"books\" query returns an array of zero or more Books (defined above).\n  type Query {\n    facets(limit: Int!): [Facet]\n    search(query: String): Search\n  }\n"])));
 var resolvers = {
     JSON: graphql_type_json_1["default"],
     Query: {
@@ -122,6 +122,24 @@ var resolvers = {
                     case 2:
                         r = _a.sent();
                         return [2 /*return*/, r.response.results.slice(0, 3)];
+                }
+            });
+        }); },
+        wiki: function (parent) { return __awaiter(void 0, void 0, void 0, function () {
+            var colorFamily, r;
+            var _a, _b;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0:
+                        colorFamily = (((_a = parent.data.facets.find(function (facet) { return facet.name === 'Color Family'; })) === null || _a === void 0 ? void 0 : _a.values) || [])[0];
+                        if (!colorFamily) {
+                            return [2 /*return*/, null];
+                        }
+                        return [4 /*yield*/, node_fetch_1["default"]("https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exintro=&titles=" + colorFamily)];
+                    case 1: return [4 /*yield*/, (_c.sent()).json()];
+                    case 2:
+                        r = _c.sent();
+                        return [2 /*return*/, (_b = Object.values(r.query.pages)[0]) === null || _b === void 0 ? void 0 : _b.extract];
                 }
             });
         }); }

@@ -11,6 +11,7 @@ const typeDefs = gql`
     value: String
     recommendations: [Item]
     explanation: ItemExplanation
+    wiki: String
   }
 
   type ItemExplanation {
@@ -103,6 +104,21 @@ const resolvers = {
 
       return r.response.results.slice(0, 3);
     },
+    wiki: async(parent) => {
+      const colorFamily = (parent.data.facets.find(facet => facet.name === 'Color Family')?.values || [])[0];
+
+      if (!colorFamily) {
+        return null;
+      }
+
+      const r = await (
+        await fetch(
+          `https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exintro=&titles=${colorFamily}`
+        )
+      ).json();
+
+      return (Object.values(r.query.pages)[0] as any)?.extract;
+    }
   },
   Facet: {
     options(parent, args) {
