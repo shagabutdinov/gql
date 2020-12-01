@@ -56,8 +56,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 exports.__esModule = true;
 var node_fetch_1 = __importDefault(require("node-fetch"));
 var apollo_server_1 = require("apollo-server");
-var typeDefs = apollo_server_1.gql(templateObject_1 || (templateObject_1 = __makeTemplateObject(["\n  # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.\n\n  type Item {\n    id: String\n    value: String\n  }\n\n  type Facet {\n    name: String\n    display_name: String\n    options(limit: Int!): [FacetOption]\n  }\n\n  type FacetOption {\n    value: String\n    display_name: String\n    top_products(limit: Int!): [Item]\n  }\n\n  # The \"Query\" type is special: it lists all of the available queries that\n  # clients can execute, along with the return type for each. In this\n  # case, the \"books\" query returns an array of zero or more Books (defined above).\n  type Query {\n    facets(limit: Int!): [Facet]\n  }\n"], ["\n  # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.\n\n  type Item {\n    id: String\n    value: String\n  }\n\n  type Facet {\n    name: String\n    display_name: String\n    options(limit: Int!): [FacetOption]\n  }\n\n  type FacetOption {\n    value: String\n    display_name: String\n    top_products(limit: Int!): [Item]\n  }\n\n  # The \"Query\" type is special: it lists all of the available queries that\n  # clients can execute, along with the return type for each. In this\n  # case, the \"books\" query returns an array of zero or more Books (defined above).\n  type Query {\n    facets(limit: Int!): [Facet]\n  }\n"])));
+var graphql_type_json_1 = __importDefault(require("graphql-type-json"));
+var typeDefs = apollo_server_1.gql(templateObject_1 || (templateObject_1 = __makeTemplateObject(["\n  # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.\n  scalar JSON\n\n  type Item {\n    id: String\n    value: String\n    recommendations: [Item]\n    explanation: ItemExplanation\n  }\n\n  type ItemExplanation {\n    is_slotted: Boolean\n    computed_score: Int\n    conversion_rules_boost: Int\n    query_refinement_boost: Int\n    final_score: Int\n  }\n\n  type Facet {\n    name: String\n    display_name: String\n    data: JSON\n    options(limit: Int!, data: [String]): [FacetOption]\n  }\n\n  type FacetOption {\n    value: String\n    display_name: String\n    top_products(limit: Int!): [Item]\n  }\n\n  type Search {\n    query: String\n    items: [Item]\n    recommendations: [Item]\n  }\n\n  # The \"Query\" type is special: it lists all of the available queries that\n  # clients can execute, along with the return type for each. In this\n  # case, the \"books\" query returns an array of zero or more Books (defined above).\n  type Query {\n    facets(limit: Int!): [Facet]\n    search(query: String): Search\n  }\n"], ["\n  # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.\n  scalar JSON\n\n  type Item {\n    id: String\n    value: String\n    recommendations: [Item]\n    explanation: ItemExplanation\n  }\n\n  type ItemExplanation {\n    is_slotted: Boolean\n    computed_score: Int\n    conversion_rules_boost: Int\n    query_refinement_boost: Int\n    final_score: Int\n  }\n\n  type Facet {\n    name: String\n    display_name: String\n    data: JSON\n    options(limit: Int!, data: [String]): [FacetOption]\n  }\n\n  type FacetOption {\n    value: String\n    display_name: String\n    top_products(limit: Int!): [Item]\n  }\n\n  type Search {\n    query: String\n    items: [Item]\n    recommendations: [Item]\n  }\n\n  # The \"Query\" type is special: it lists all of the available queries that\n  # clients can execute, along with the return type for each. In this\n  # case, the \"books\" query returns an array of zero or more Books (defined above).\n  type Query {\n    facets(limit: Int!): [Facet]\n    search(query: String): Search\n  }\n"])));
 var resolvers = {
+    JSON: graphql_type_json_1["default"],
     Query: {
         facets: function (_, args) { return __awaiter(void 0, void 0, void 0, function () {
             var r;
@@ -70,10 +72,63 @@ var resolvers = {
                         return [2 /*return*/, r.response.facets.slice(0, args.limit)];
                 }
             });
+        }); },
+        search: function (_, args) { return __awaiter(void 0, void 0, void 0, function () {
+            var r;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, node_fetch_1["default"]("https://ac.cnstrc.com/search/" + args.query + "?key=u7PNVQx-prod-en-us&explain=True")];
+                    case 1: return [4 /*yield*/, (_a.sent()).json()];
+                    case 2:
+                        r = _a.sent();
+                        return [2 /*return*/, __assign(__assign({}, r), { query: args.query })];
+                }
+            });
+        }); }
+    },
+    Search: {
+        recommendations: function (parent) { return __awaiter(void 0, void 0, void 0, function () {
+            var r;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, node_fetch_1["default"]("https://ac.cnstrc.com/recommendations/v1/pods/zero_results_2?key=u7PNVQx-prod-en-us&query=" + parent.query)];
+                    case 1: return [4 /*yield*/, (_a.sent()).json()];
+                    case 2:
+                        r = _a.sent();
+                        return [2 /*return*/, r.response.results.slice(0, 3)];
+                }
+            });
+        }); },
+        items: function (parent) { return __awaiter(void 0, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                console.log("XXXX main.ts:83 ", parent);
+                return [2 /*return*/, parent.response.results.slice(0, 3)];
+            });
+        }); }
+    },
+    Item: {
+        id: function (parent) {
+            return parent.data.id;
+        },
+        explanation: function (parent) {
+            return __assign(__assign({}, parent.explanation), { is_slotted: parent.is_slotted });
+        },
+        recommendations: function (parent) { return __awaiter(void 0, void 0, void 0, function () {
+            var r;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, node_fetch_1["default"]("https://ac.cnstrc.com/recommendations/v1/pods/cart_page_1?key=u7PNVQx-prod-en-us&item_id=" + parent.data.id)];
+                    case 1: return [4 /*yield*/, (_a.sent()).json()];
+                    case 2:
+                        r = _a.sent();
+                        return [2 /*return*/, r.response.results.slice(0, 3)];
+                }
+            });
         }); }
     },
     Facet: {
         options: function (parent, args) {
+            console.log("XXXX main.ts:47 ", args);
             return (parent.options || [])
                 .map(function (option) { return (__assign(__assign({}, option), { facet: parent })); })
                 .slice(0, args.limit);
